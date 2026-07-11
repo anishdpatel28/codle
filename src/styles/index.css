@@ -17,10 +17,10 @@
     @apply bg-bg text-primary font-sans antialiased;
   }
 
-  /* Terminal command input: strip the native chrome so the caret/prompt read
-     as a command line, not a search pill. */
+  /* Terminal command input: strip native chrome and hide the native caret so
+     the block cursor is the only visual cursor. */
   input.cmd {
-    @apply bg-transparent outline-none border-none w-full text-primary font-mono caret-accent;
+    @apply bg-transparent outline-none border-none p-0 w-full text-primary font-mono caret-transparent;
   }
   input.cmd::placeholder {
     @apply text-muted;

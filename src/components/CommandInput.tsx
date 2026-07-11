@@ -90,7 +90,7 @@ export function CommandInput({ onSubmit, disabled, suggestions = [] }: Props) {
       <div className="relative flex-1">
         <input
           ref={inputRef}
-          className="cmd caret-accent text-mono"
+          className="cmd text-mono"
           value={value}
           onChange={(e) => {
             setValue(e.target.value);
@@ -106,8 +106,13 @@ export function CommandInput({ onSubmit, disabled, suggestions = [] }: Props) {
           autoComplete="off"
           aria-label="Guess the term, or submit empty to skip for a hint"
         />
-        {value === '' && !disabled && (
-          <span className="animate-cursor-blink pointer-events-none absolute left-0 top-1/2 h-[18px] w-[9px] -translate-y-1/2 bg-accent" />
+        {/* Block cursor: mirrors the typed text's width so it sits at the end,
+            and stays visible regardless of focus. It is the only caret. */}
+        {!disabled && (
+          <div className="pointer-events-none absolute inset-0 flex items-center font-mono text-mono">
+            <span className="invisible whitespace-pre">{value}</span>
+            <span className="animate-cursor-blink h-[18px] w-[9px] bg-accent" />
+          </div>
         )}
       </div>
     </form>
