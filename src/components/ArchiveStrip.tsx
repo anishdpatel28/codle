@@ -14,7 +14,7 @@ export function ArchiveStrip({ terms, scores }: Props) {
 
   return (
     <section className="rounded-[2px] border border-hairline bg-surface p-4">
-      <h2 className="mb-3 font-sans text-meta uppercase text-muted">Signal history</h2>
+      <h2 className="mb-3 font-sans text-meta uppercase text-muted">History</h2>
       <div className="flex flex-wrap gap-1">
         {recent.map((t) => {
           const s = scores[t.id];
