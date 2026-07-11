@@ -21,15 +21,9 @@ export function ArchiveReviewPage() {
 
   return (
     <Layout>
-      <h1 className="mb-2 font-sans text-h1 text-primary">
+      <h1 className="mb-8 font-sans text-h1 text-primary">
         Signal <span className="text-accent">review</span>
       </h1>
-      <Link
-        to="/archive"
-        className="mb-8 inline-block font-mono text-mono text-muted transition-colors hover:text-primary"
-      >
-        &gt; back to archive
-      </Link>
 
       {loading && <p className="font-mono text-mono text-muted">loading…</p>}
       {error && <p className="font-mono text-mono text-danger">error: {error}</p>}
