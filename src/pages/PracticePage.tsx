@@ -1,30 +1,48 @@
-// Practice mode: a random past transmission (or a specific one linked from the
-// archive). Results here never touch the streak (saved with is_practice, which
-// the data layer keeps out of the daily score set).
+// Practice mode. A random past transmission (no date) never touches scores. A
+// specific date, reached from the archive, records a real result for that day so
+// the archive reflects it.
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { LogPanel } from '../components/LogPanel';
 import { usePractice } from '../hooks/usePractice';
 import { useGame } from '../game/useGame';
+import { useAuth } from '../hooks/authContext';
 import { MAX_ATTEMPTS } from '../game/gameMachine';
-import { getTermNames } from '../data/queries';
+import { getTermNames, saveScore } from '../data/queries';
 
 export function PracticePage() {
   const { date } = useParams();
+  const { user } = useAuth();
   const { term, loading, error, reroll, canReroll } = usePractice(date);
   const { state, submit } = useGame(term);
   const suggestions = useMemo(() => getTermNames(), []);
 
+  // A dated replay from the archive is a real result for that day; a random pull
+  // is not. Save once when a dated round finishes.
+  const savedFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (!date || !term || state.status === 'playing') return;
+    if (savedFor.current === term.id) return;
+    savedFor.current = term.id;
+    void saveScore(user?.id ?? null, {
+      dailyTermId: term.id,
+      attemptsUsed: state.attemptsUsed,
+      solved: state.status === 'won',
+      isPractice: false,
+    });
+  }, [date, term, state.status, state.attemptsUsed, user?.id]);
+
   return (
     <Layout>
       <h1 className="mb-2 font-sans text-h1 text-primary">
-        Practice <span className="text-accent">signal</span>
+        {date ? 'Archived' : 'Practice'} <span className="text-accent">signal</span>
       </h1>
       <p className="mb-8 max-w-prose font-sans text-body text-muted">
-        A past transmission pulled at random. Nothing you do here affects your
-        streak.
+        {date
+          ? `Decoding the signal from ${date}. Your result is saved to the archive.`
+          : 'A past transmission pulled at random. Nothing here affects your streak.'}
       </p>
 
       <div className="max-w-3xl">
@@ -38,7 +56,7 @@ export function PracticePage() {
             term={term}
             state={state}
             onSubmit={submit}
-            signalLabel={`SIGNAL://PRACTICE${date ? `/${date}` : ''}`}
+            signalLabel={date ? `SIGNAL://${date}` : 'SIGNAL://PRACTICE'}
             maxAttempts={MAX_ATTEMPTS}
             suggestions={suggestions}
           />
