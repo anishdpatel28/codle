@@ -1,7 +1,3 @@
-// DRAFT PRIVACY POLICY — placeholder copy for review only. This is NOT
-// lawyer-reviewed final text. Confirm accuracy, fill in the contact address, and
-// have it reviewed before publishing.
-
 import { Layout } from '../components/Layout';
 
 const CONTACT_EMAIL = 'anishdpatel28@gmail.com';
