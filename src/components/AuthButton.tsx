@@ -23,7 +23,7 @@ export function AuthButton() {
         onClick={signInWithGoogle}
         className="font-mono text-mono text-accent transition-shadow hover:glow-accent"
       >
-        &gt; sign in with google
+        &gt; sign in
       </button>
     );
   }
