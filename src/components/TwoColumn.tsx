@@ -15,7 +15,8 @@ export function TwoColumn({ main, sidebar, disclosureLabel = 'stats & guesses' }
   return (
     <div className="grid grid-cols-1 gap-12 lg:grid-cols-[62fr_38fr]">
       <div>{main}</div>
-      <aside className="lg:mt-14">
+      {/* No top offset: the sidebar's first box aligns with the log's chrome bar. */}
+      <aside>
         <div className="hidden lg:block">{sidebar}</div>
         <div className="lg:hidden">
           <Disclosure label={disclosureLabel}>{sidebar}</Disclosure>
