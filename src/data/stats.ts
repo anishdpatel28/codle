@@ -1,10 +1,9 @@
-// Pure derivation of streak/win-rate stats from a user's daily scores.
+// Pure derivation of win-rate stats from a user's daily scores.
 // Practice results never reach here (queries excludes them).
 
 import type { DailyTerm, Score } from './types';
 
 export interface Stats {
-  currentStreak: number;
   played: number;
   wins: number;
   winRate: number; // 0..1
@@ -27,21 +26,7 @@ export function computeStats(
     if (s.solved) wins += 1;
   }
 
-  // Current streak: consecutive solved days from the most recent, tolerating a
-  // not-yet-played today so the streak doesn't reset before you play.
-  let currentStreak = 0;
-  for (let i = 0; i < terms.length; i++) {
-    const s = scores[terms[i].id];
-    if (!s) {
-      if (i === 0) continue; // today not played yet — keep looking back
-      break;
-    }
-    if (s.solved) currentStreak += 1;
-    else break;
-  }
-
   return {
-    currentStreak,
     played,
     wins,
     winRate: played === 0 ? 0 : wins / played,
