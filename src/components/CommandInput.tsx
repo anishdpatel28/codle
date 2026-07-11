@@ -15,7 +15,15 @@ export function CommandInput({ onSubmit, disabled, suggestions = [] }: Props) {
   const [value, setValue] = useState('');
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(-1);
+  const [caret, setCaret] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Track the real insertion point so the block cursor can sit on it, including
+  // after arrow-key navigation or a click into the middle of the text.
+  const syncCaret = () => {
+    const el = inputRef.current;
+    if (el) setCaret(el.selectionStart ?? el.value.length);
+  };
 
   const matches = useMemo(() => {
     const q = value.trim().toLowerCase();
@@ -29,9 +37,14 @@ export function CommandInput({ onSubmit, disabled, suggestions = [] }: Props) {
 
   const select = (term: string) => {
     setValue(term);
+    setCaret(term.length);
     setOpen(false);
     setHighlight(-1);
-    inputRef.current?.focus();
+    const el = inputRef.current;
+    if (el) {
+      el.focus();
+      requestAnimationFrame(() => el.setSelectionRange(term.length, term.length));
+    }
   };
 
   const handleSubmit = (e: FormEvent) => {
@@ -39,6 +52,7 @@ export function CommandInput({ onSubmit, disabled, suggestions = [] }: Props) {
     if (disabled) return;
     onSubmit(value);
     setValue('');
+    setCaret(0);
     setOpen(false);
     setHighlight(-1);
   };
@@ -94,11 +108,18 @@ export function CommandInput({ onSubmit, disabled, suggestions = [] }: Props) {
           value={value}
           onChange={(e) => {
             setValue(e.target.value);
+            setCaret(e.target.selectionStart ?? e.target.value.length);
             setOpen(true);
             setHighlight(-1);
           }}
           onKeyDown={handleKeyDown}
-          onFocus={() => setOpen(true)}
+          onKeyUp={syncCaret}
+          onSelect={syncCaret}
+          onClick={syncCaret}
+          onFocus={() => {
+            setOpen(true);
+            syncCaret();
+          }}
           onBlur={() => setOpen(false)}
           disabled={disabled}
           autoFocus
@@ -106,11 +127,11 @@ export function CommandInput({ onSubmit, disabled, suggestions = [] }: Props) {
           autoComplete="off"
           aria-label="Guess the term, or submit empty to skip for a hint"
         />
-        {/* Block cursor: mirrors the typed text's width so it sits at the end,
-            and stays visible regardless of focus. It is the only caret. */}
+        {/* Block cursor: an invisible mirror of the text up to the caret places
+            the block on the real insertion point. It is the only caret. */}
         {!disabled && (
           <div className="pointer-events-none absolute inset-0 flex items-center font-mono text-mono">
-            <span className="invisible whitespace-pre">{value}</span>
+            <span className="invisible whitespace-pre">{value.slice(0, caret)}</span>
             <span className="animate-cursor-blink h-[18px] w-[9px] bg-accent" />
           </div>
         )}
