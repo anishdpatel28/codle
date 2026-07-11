@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { termBank } from './terms';
 import type { DailyTerm, Score, ScoreInput } from './types';
 import { seedTermForDate, seedPastTerms, todayISO } from './dailyTerm';
+import { readStore, writeStore } from './storage';
 
 /** Every valid answer, for the guess-input autocomplete. */
 export function getTermNames(): string[] {
@@ -103,20 +104,11 @@ export async function getRandomPastTerm(): Promise<DailyTerm | null> {
 const LOCAL_SCORES_KEY = 'codle:scores';
 
 function readLocalScores(): Score[] {
-  try {
-    const raw = localStorage.getItem(LOCAL_SCORES_KEY);
-    return raw ? (JSON.parse(raw) as Score[]) : [];
-  } catch {
-    return [];
-  }
+  return readStore<Score[]>(LOCAL_SCORES_KEY, []);
 }
 
 function writeLocalScores(scores: Score[]): void {
-  try {
-    localStorage.setItem(LOCAL_SCORES_KEY, JSON.stringify(scores));
-  } catch {
-    // storage unavailable
-  }
+  writeStore(LOCAL_SCORES_KEY, scores);
 }
 
 function upsertLocalScore(input: ScoreInput): void {

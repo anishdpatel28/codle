@@ -4,6 +4,7 @@
 
 import type { GameState } from '../game/types';
 import { initGame } from '../game/gameMachine';
+import { readStore, writeStore } from './storage';
 
 const KEY = 'codle:progress';
 
@@ -19,20 +20,11 @@ interface PersistedRound {
 type ProgressMap = Record<string, PersistedRound>;
 
 function readAll(): ProgressMap {
-  try {
-    const raw = localStorage.getItem(KEY);
-    return raw ? (JSON.parse(raw) as ProgressMap) : {};
-  } catch {
-    return {};
-  }
+  return readStore<ProgressMap>(KEY, {});
 }
 
 function writeAll(map: ProgressMap): void {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(map));
-  } catch {
-    // storage unavailable — progress simply isn't persisted
-  }
+  writeStore(KEY, map);
 }
 
 export function loadProgress(termId: string): GameState | null {
