@@ -10,7 +10,9 @@ interface Props {
 export function RedactedLine({ index }: Props) {
   return (
     <div className="flex items-center gap-3 py-2" aria-hidden>
-      <span className="font-mono text-mono text-muted/50 select-none">Hint {index}</span>
+      <span className="shrink-0 whitespace-nowrap font-mono text-mono text-muted/50 select-none">
+        Hint {index}
+      </span>
       <span className={`redacted-bar h-[14px] ${WIDTHS[(index - 1) % WIDTHS.length]}`} />
     </div>
   );

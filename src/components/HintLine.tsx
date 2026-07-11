@@ -27,7 +27,9 @@ export function HintLine({ index, hint, animate, onDone }: Props) {
 
   return (
     <div className="relative flex items-start gap-3 overflow-hidden py-2">
-      <span className="font-mono text-mono text-muted select-none">Hint {index}</span>
+      <span className="shrink-0 whitespace-nowrap font-mono text-mono text-muted select-none">
+        Hint {index}
+      </span>
       <p className="font-mono text-mono">
         <span className={glow ? 'text-primary glow-accent' : 'text-primary'}>{settled}</span>
         <span className="text-accent">{scrambling}</span>
