@@ -1,7 +1,9 @@
 // "Share result" as a mono command line. Renders only once the round is
 // finished. Builds a spoiler-free signal read — no letter grid.
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
+const COPIED_MS = 5000;
 
 interface Props {
   label: string;
@@ -44,12 +46,23 @@ async function copyToClipboard(text: string): Promise<boolean> {
 
 export function ShareCommand(props: Props) {
   const [copied, setCopied] = useState(false);
+  const timer = useRef<number | null>(null);
+
+  useEffect(() => () => {
+    if (timer.current !== null) window.clearTimeout(timer.current);
+  }, []);
 
   const handleClick = async () => {
     const ok = await copyToClipboard(buildShare(props));
     if (!ok) return;
     setCopied(true);
-    window.setTimeout(() => setCopied(false), 2000);
+    // Each click restarts the full window, so it stays "copied" for another
+    // COPIED_MS from the most recent click.
+    if (timer.current !== null) window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => {
+      setCopied(false);
+      timer.current = null;
+    }, COPIED_MS);
   };
 
   return (
