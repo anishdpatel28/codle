@@ -1,17 +1,17 @@
 // Practice mode. A random past transmission (no date) never touches scores. A
 // specific date, reached from the archive, records a real result for that day so
-// the archive reflects it. Same two-column layout as the daily page.
+// the archive reflects it. Practice shows only the guesses panel — no stats or
+// history, since practice isn't part of the tracked daily record.
 
 import { useEffect, useMemo, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { LogPanel } from '../components/LogPanel';
-import { Sidebar } from '../components/Sidebar';
+import { GuessPanel } from '../components/GuessPanel';
 import { TwoColumn } from '../components/TwoColumn';
 import { usePractice } from '../hooks/usePractice';
 import { useGame } from '../game/useGame';
 import { useAuth } from '../hooks/authContext';
-import { useDashboard } from '../hooks/useDashboard';
 import { MAX_ATTEMPTS } from '../game/gameMachine';
 import { getTermNames, saveScore } from '../data/queries';
 
@@ -20,7 +20,6 @@ export function PracticePage() {
   const { user } = useAuth();
   const { term, loading, error, reroll, canReroll } = usePractice(date);
   const { state, submit } = useGame(term, Boolean(date));
-  const { terms, scores, stats, reload } = useDashboard(user?.id ?? null);
   const suggestions = useMemo(() => getTermNames(), []);
 
   // A dated replay from the archive is a real result for that day; a random pull
@@ -36,26 +35,8 @@ export function PracticePage() {
       solved: state.status === 'won',
       isPractice: false,
       guesses: state.guesses,
-    }).then(reload);
-  }, [date, term, state.status, state.attemptsUsed, state.guesses, user?.id, reload]);
-
-  const finished = state.status !== 'playing';
-  const sidebar = (
-    <Sidebar
-      stats={stats}
-      terms={terms}
-      scores={scores}
-      guesses={state.guesses}
-      solved={state.status === 'won'}
-      share={{
-        label: term?.date ?? 'practice',
-        status: finished ? (state.status as 'won' | 'lost') : null,
-        attemptsUsed: state.attemptsUsed,
-        solvedOnAttempt: state.solvedOnAttempt,
-        total: MAX_ATTEMPTS,
-      }}
-    />
-  );
+    });
+  }, [date, term, state.status, state.attemptsUsed, state.guesses, user?.id]);
 
   return (
     <Layout>
@@ -71,7 +52,14 @@ export function PracticePage() {
 
       {term && (
         <TwoColumn
-          sidebar={sidebar}
+          disclosureLabel="guesses"
+          sidebar={
+            <GuessPanel
+              guesses={state.guesses}
+              solved={state.status === 'won'}
+              total={MAX_ATTEMPTS}
+            />
+          }
           main={
             <>
               <LogPanel
