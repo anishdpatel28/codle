@@ -1,15 +1,17 @@
 // Practice mode. A random past transmission (no date) never touches scores. A
 // specific date, reached from the archive, records a real result for that day so
-// the archive reflects it.
+// the archive reflects it. Same two-column layout as the daily page.
 
 import { useEffect, useMemo, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { LogPanel } from '../components/LogPanel';
-import { GuessPanel } from '../components/GuessPanel';
+import { Sidebar } from '../components/Sidebar';
+import { TwoColumn } from '../components/TwoColumn';
 import { usePractice } from '../hooks/usePractice';
 import { useGame } from '../game/useGame';
 import { useAuth } from '../hooks/authContext';
+import { useDashboard } from '../hooks/useDashboard';
 import { MAX_ATTEMPTS } from '../game/gameMachine';
 import { getTermNames, saveScore } from '../data/queries';
 
@@ -18,6 +20,7 @@ export function PracticePage() {
   const { user } = useAuth();
   const { term, loading, error, reroll, canReroll } = usePractice(date);
   const { state, submit } = useGame(term, Boolean(date));
+  const { terms, scores, stats, reload } = useDashboard(user?.id ?? null);
   const suggestions = useMemo(() => getTermNames(), []);
 
   // A dated replay from the archive is a real result for that day; a random pull
@@ -33,54 +36,64 @@ export function PracticePage() {
       solved: state.status === 'won',
       isPractice: false,
       guesses: state.guesses,
-    });
-  }, [date, term, state.status, state.attemptsUsed, state.guesses, user?.id]);
+    }).then(reload);
+  }, [date, term, state.status, state.attemptsUsed, state.guesses, user?.id, reload]);
+
+  const finished = state.status !== 'playing';
+  const sidebar = (
+    <Sidebar
+      stats={stats}
+      terms={terms}
+      scores={scores}
+      guesses={state.guesses}
+      solved={state.status === 'won'}
+      share={{
+        label: term?.date ?? 'practice',
+        status: finished ? (state.status as 'won' | 'lost') : null,
+        attemptsUsed: state.attemptsUsed,
+        solvedOnAttempt: state.solvedOnAttempt,
+        total: MAX_ATTEMPTS,
+      }}
+    />
+  );
 
   return (
     <Layout>
-      <h1 className="mb-2 font-sans text-h1 text-primary">
+      <h1 className="mb-8 font-sans text-h1 text-primary">
         {date ? 'Archived' : 'Practice'} <span className="text-accent">signal</span>
       </h1>
-      <p className="mb-8 max-w-prose font-sans text-body text-muted">
-        {date
-          ? `Decoding the signal from ${date}. Your result is saved to the archive.`
-          : 'A past transmission pulled at random. Nothing here is recorded.'}
-      </p>
 
       {loading && <p className="font-mono text-mono text-muted">acquiring signal…</p>}
       {error && <p className="font-mono text-mono text-danger">error: {error}</p>}
       {!loading && !error && !term && (
         <p className="font-mono text-mono text-muted">no past transmissions to practice yet.</p>
       )}
+
       {term && (
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
-          <div className="min-w-0 flex-1 lg:max-w-3xl">
-            <LogPanel
-              term={term}
-              state={state}
-              onSubmit={submit}
-              signalLabel={date ? `SIGNAL://${date}` : 'SIGNAL://PRACTICE'}
-              maxAttempts={MAX_ATTEMPTS}
-              suggestions={suggestions}
-            />
-            {canReroll && (
-              <button
-                type="button"
-                onClick={reroll}
-                className="mt-6 font-mono text-mono text-accent transition-shadow hover:glow-accent"
-              >
-                &gt; new signal
-              </button>
-            )}
-          </div>
-          <div className="w-full lg:w-64">
-            <GuessPanel
-              guesses={state.guesses}
-              solved={state.status === 'won'}
-              total={MAX_ATTEMPTS}
-            />
-          </div>
-        </div>
+        <TwoColumn
+          sidebar={sidebar}
+          main={
+            <>
+              <LogPanel
+                term={term}
+                state={state}
+                onSubmit={submit}
+                signalLabel={date ? `SIGNAL://${date}` : 'SIGNAL://PRACTICE'}
+                maxAttempts={MAX_ATTEMPTS}
+                suggestions={suggestions}
+              />
+              {canReroll && (
+                <button
+                  type="button"
+                  onClick={reroll}
+                  className="mt-6 font-mono text-mono text-accent transition-shadow hover:glow-accent"
+                >
+                  &gt; new signal
+                </button>
+              )}
+            </>
+          }
+        />
       )}
     </Layout>
   );

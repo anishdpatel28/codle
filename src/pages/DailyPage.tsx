@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { Layout } from '../components/Layout';
 import { LogPanel } from '../components/LogPanel';
 import { Sidebar } from '../components/Sidebar';
-import { Disclosure } from '../components/Disclosure';
+import { TwoColumn } from '../components/TwoColumn';
 import { useAuth } from '../hooks/authContext';
 import { useDaily } from '../hooks/useDaily';
 import { useDashboard } from '../hooks/useDashboard';
@@ -62,34 +62,30 @@ export function DailyPage() {
         Today&rsquo;s <span className="text-accent">codle</span>
       </h1>
 
-      <div className="grid grid-cols-1 gap-12 lg:grid-cols-[62fr_38fr]">
-        <div>
-          {loading && <p className="font-mono text-mono text-muted">acquiring signal…</p>}
-          {error && <p className="font-mono text-mono text-danger">error: {error}</p>}
-          {!loading && !error && !term && (
-            <p className="font-mono text-mono text-muted">
-              no signal is scheduled for {today}. check back tomorrow.
-            </p>
-          )}
-          {term && (
-            <LogPanel
-              term={term}
-              state={state}
-              onSubmit={submit}
-              signalLabel={`SIGNAL://${today}`}
-              maxAttempts={MAX_ATTEMPTS}
-              suggestions={suggestions}
-            />
-          )}
-        </div>
-
-        <aside className="lg:mt-[140px]">
-          <div className="hidden lg:block">{sidebar}</div>
-          <div className="lg:hidden">
-            <Disclosure label="archive & stats">{sidebar}</Disclosure>
-          </div>
-        </aside>
-      </div>
+      <TwoColumn
+        sidebar={sidebar}
+        main={
+          <>
+            {loading && <p className="font-mono text-mono text-muted">acquiring signal…</p>}
+            {error && <p className="font-mono text-mono text-danger">error: {error}</p>}
+            {!loading && !error && !term && (
+              <p className="font-mono text-mono text-muted">
+                no signal is scheduled for {today}. check back tomorrow.
+              </p>
+            )}
+            {term && (
+              <LogPanel
+                term={term}
+                state={state}
+                onSubmit={submit}
+                signalLabel={`SIGNAL://${today}`}
+                maxAttempts={MAX_ATTEMPTS}
+                suggestions={suggestions}
+              />
+            )}
+          </>
+        }
+      />
     </Layout>
   );
 }

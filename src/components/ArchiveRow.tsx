@@ -34,7 +34,7 @@ export function ArchiveRow({ term, score }: Props) {
     >
       <div className="flex flex-col gap-1">
         <span className="font-mono text-meta uppercase text-muted">{term.date}</span>
-        <span className="redacted-bar inline-block h-[14px] w-40" aria-label="not played" />
+        <span className="redacted-bar inline-block h-[14px] w-[160px]" aria-label="not played" />
       </div>
       <span className="font-mono text-mono text-accent">&gt; decode</span>
     </Link>
