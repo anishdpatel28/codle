@@ -4,6 +4,7 @@
 import type { Stats } from '../data/stats';
 import type { DailyTerm, Score } from '../data/types';
 import { StatsBlock } from './StatsBlock';
+import { GuessPanel } from './GuessPanel';
 import { ArchiveStrip } from './ArchiveStrip';
 import { ShareCommand } from './ShareCommand';
 
@@ -19,12 +20,15 @@ interface Props {
   stats: Stats;
   terms: DailyTerm[];
   scores: Record<string, Score>;
+  guesses: string[];
+  solved: boolean;
   share: ShareInfo;
 }
 
-export function Sidebar({ stats, terms, scores, share }: Props) {
+export function Sidebar({ stats, terms, scores, guesses, solved, share }: Props) {
   return (
     <div className="flex flex-col gap-8">
+      <GuessPanel guesses={guesses} solved={solved} total={share.total} />
       <StatsBlock stats={stats} />
       <ArchiveStrip terms={terms} scores={scores} />
       {share.status && (

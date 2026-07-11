@@ -4,23 +4,11 @@
 import { Link, useParams } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { LogPanel } from '../components/LogPanel';
+import { GuessPanel } from '../components/GuessPanel';
 import { useAuth } from '../hooks/authContext';
 import { useArchiveEntry } from '../hooks/useArchiveEntry';
 import { MAX_ATTEMPTS } from '../game/gameMachine';
-import type { GameState } from '../game/types';
-import type { Score } from '../data/types';
-
-function reviewState(score: Score, hintCount: number): GameState {
-  return {
-    attemptsUsed: score.attemptsUsed,
-    revealedHints: score.solved ? Math.min(hintCount, score.attemptsUsed) : hintCount,
-    status: score.solved ? 'won' : 'lost',
-    solvedOnAttempt: score.solved ? score.attemptsUsed : null,
-    lastResult: null,
-    feedbackId: 0,
-    guesses: score.guesses,
-  };
-}
+import { reviewState } from '../game/review';
 
 export function ArchiveReviewPage() {
   const { date } = useParams();
@@ -39,7 +27,7 @@ export function ArchiveReviewPage() {
         &gt; back to archive
       </Link>
 
-      <div className="max-w-3xl">
+      <div className="max-w-5xl">
         {loading && <p className="font-mono text-mono text-muted">loading…</p>}
         {error && <p className="font-mono text-mono text-danger">error: {error}</p>}
         {!loading && !error && !term && (
@@ -54,15 +42,22 @@ export function ArchiveReviewPage() {
           </p>
         )}
         {term && score && (
-          <LogPanel
-            term={term}
-            state={reviewState(score, term.hints.length)}
-            onSubmit={() => {}}
-            signalLabel={`SIGNAL://${date}`}
-            maxAttempts={MAX_ATTEMPTS}
-            suggestions={[]}
-            readOnly
-          />
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
+            <div className="min-w-0 flex-1">
+              <LogPanel
+                term={term}
+                state={reviewState(score, term.hints.length)}
+                onSubmit={() => {}}
+                signalLabel={`SIGNAL://${date}`}
+                maxAttempts={MAX_ATTEMPTS}
+                suggestions={[]}
+                readOnly
+              />
+            </div>
+            <div className="w-full lg:w-64">
+              <GuessPanel guesses={score.guesses} solved={score.solved} total={MAX_ATTEMPTS} />
+            </div>
+          </div>
         )}
       </div>
     </Layout>

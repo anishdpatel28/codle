@@ -1,11 +1,11 @@
-// The terminal panel: chrome, the hint log, the round's guess history, the
-// end-of-round reveal, and the command input. Presentational — state via props.
+// The terminal panel: chrome, the hint log, the end-of-round reveal, and the
+// command input. Presentational — state via props. Guess history lives in its
+// own side panel so this box stays a fixed height.
 
 import type { DailyTerm } from '../data/types';
 import type { GameState } from '../game/types';
 import { WindowChrome } from './WindowChrome';
 import { HintLog } from './HintLog';
-import { GuessHistory } from './GuessHistory';
 import { ResultBanner } from './ResultBanner';
 import { CommandInput } from './CommandInput';
 
@@ -37,7 +37,6 @@ export function LogPanel({
 
       <div className="px-6 py-4">
         <HintLog hints={term.hints} revealedHints={state.revealedHints} />
-        <GuessHistory guesses={state.guesses} solved={state.status === 'won'} />
       </div>
 
       {result ? (

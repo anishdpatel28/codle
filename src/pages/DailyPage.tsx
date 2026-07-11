@@ -44,6 +44,8 @@ export function DailyPage() {
       stats={stats}
       terms={terms}
       scores={scores}
+      guesses={state.guesses}
+      solved={state.status === 'won'}
       share={{
         label: today,
         status: finished ? (state.status as 'won' | 'lost') : null,

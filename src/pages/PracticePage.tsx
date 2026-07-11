@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { LogPanel } from '../components/LogPanel';
+import { GuessPanel } from '../components/GuessPanel';
 import { usePractice } from '../hooks/usePractice';
 import { useGame } from '../game/useGame';
 import { useAuth } from '../hooks/authContext';
@@ -43,36 +44,44 @@ export function PracticePage() {
       <p className="mb-8 max-w-prose font-sans text-body text-muted">
         {date
           ? `Decoding the signal from ${date}. Your result is saved to the archive.`
-          : 'A past transmission pulled at random. Nothing here affects your streak.'}
+          : 'A past transmission pulled at random. Nothing here is recorded.'}
       </p>
 
-      <div className="max-w-3xl">
-        {loading && <p className="font-mono text-mono text-muted">acquiring signal…</p>}
-        {error && <p className="font-mono text-mono text-danger">error: {error}</p>}
-        {!loading && !error && !term && (
-          <p className="font-mono text-mono text-muted">no past transmissions to practice yet.</p>
-        )}
-        {term && (
-          <LogPanel
-            term={term}
-            state={state}
-            onSubmit={submit}
-            signalLabel={date ? `SIGNAL://${date}` : 'SIGNAL://PRACTICE'}
-            maxAttempts={MAX_ATTEMPTS}
-            suggestions={suggestions}
-          />
-        )}
-
-        {canReroll && (
-          <button
-            type="button"
-            onClick={reroll}
-            className="mt-6 font-mono text-mono text-accent transition-shadow hover:glow-accent"
-          >
-            &gt; new signal
-          </button>
-        )}
-      </div>
+      {loading && <p className="font-mono text-mono text-muted">acquiring signal…</p>}
+      {error && <p className="font-mono text-mono text-danger">error: {error}</p>}
+      {!loading && !error && !term && (
+        <p className="font-mono text-mono text-muted">no past transmissions to practice yet.</p>
+      )}
+      {term && (
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
+          <div className="min-w-0 flex-1 lg:max-w-3xl">
+            <LogPanel
+              term={term}
+              state={state}
+              onSubmit={submit}
+              signalLabel={date ? `SIGNAL://${date}` : 'SIGNAL://PRACTICE'}
+              maxAttempts={MAX_ATTEMPTS}
+              suggestions={suggestions}
+            />
+            {canReroll && (
+              <button
+                type="button"
+                onClick={reroll}
+                className="mt-6 font-mono text-mono text-accent transition-shadow hover:glow-accent"
+              >
+                &gt; new signal
+              </button>
+            )}
+          </div>
+          <div className="w-full lg:w-64">
+            <GuessPanel
+              guesses={state.guesses}
+              solved={state.status === 'won'}
+              total={MAX_ATTEMPTS}
+            />
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }
