@@ -4,17 +4,14 @@
 
 import { Layout } from '../components/Layout';
 
-const CONTACT_EMAIL = 'privacy@example.com'; // DRAFT: replace with a real address.
+const CONTACT_EMAIL = 'anishdpatel28@gmail.com';
 
 export function PrivacyPage() {
   return (
     <Layout>
-      <h1 className="mb-2 font-sans text-h1 text-primary">
+      <h1 className="mb-8 font-sans text-h1 text-primary">
         Privacy <span className="text-accent">policy</span>
       </h1>
-      <p className="mb-8 font-mono text-meta uppercase text-muted">
-        Draft — pending review
-      </p>
 
       <div className="flex max-w-prose flex-col gap-6 font-sans text-body text-primary/90">
         <section className="flex flex-col gap-2">
