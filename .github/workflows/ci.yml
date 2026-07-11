@@ -8,7 +8,7 @@ on:
 
 jobs:
   verify:
-    name: Lint, type-check, build
+    name: Lint, type-check, test, build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,6 +26,10 @@ jobs:
 
       - name: Type-check
         run: npm run typecheck
+
+      # Fails the build (and blocks deploy) if any test fails.
+      - name: Test
+        run: npm test
 
       - name: Build
         run: npm run build
