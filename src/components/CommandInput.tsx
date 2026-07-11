@@ -1,7 +1,9 @@
-// Guess input with a prefix-matched term dropdown. Picking an option fills the
-// field; an empty submit is a skip.
+// Guess input with a prefix-matched term dropdown. Only a known term (or an
+// empty skip) can be submitted; anything else shows an inline error. Uses the
+// browser's native caret (tinted amber) so selection/highlighting work normally.
 
 import { useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { isEmptyGuess, isValidTerm } from '../game/validate';
 
 interface Props {
   onSubmit: (guess: string) => void;
@@ -15,15 +17,8 @@ export function CommandInput({ onSubmit, disabled, suggestions = [] }: Props) {
   const [value, setValue] = useState('');
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(-1);
-  const [caret, setCaret] = useState(0);
+  const [error, setError] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // Track the real insertion point so the block cursor can sit on it, including
-  // after arrow-key navigation or a click into the middle of the text.
-  const syncCaret = () => {
-    const el = inputRef.current;
-    if (el) setCaret(el.selectionStart ?? el.value.length);
-  };
 
   const matches = useMemo(() => {
     const q = value.trim().toLowerCase();
@@ -35,24 +30,27 @@ export function CommandInput({ onSubmit, disabled, suggestions = [] }: Props) {
 
   const showList = open && !disabled && matches.length > 0;
 
+  // A submission is allowed if it's an intentional skip or a recognized term.
+  const canSubmit = isEmptyGuess(value) || isValidTerm(value, suggestions);
+
   const select = (term: string) => {
     setValue(term);
-    setCaret(term.length);
+    setError(false);
     setOpen(false);
     setHighlight(-1);
-    const el = inputRef.current;
-    if (el) {
-      el.focus();
-      requestAnimationFrame(() => el.setSelectionRange(term.length, term.length));
-    }
+    inputRef.current?.focus();
   };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (disabled) return;
+    if (!canSubmit) {
+      setError(true);
+      return;
+    }
     onSubmit(value);
     setValue('');
-    setCaret(0);
+    setError(false);
     setOpen(false);
     setHighlight(-1);
   };
@@ -77,7 +75,7 @@ export function CommandInput({ onSubmit, disabled, suggestions = [] }: Props) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="relative flex items-center gap-3 border-t border-hairline bg-surface-raised px-6 py-4"
+      className="relative flex flex-col gap-1 border-t border-hairline bg-surface-raised px-6 py-4"
     >
       {showList && (
         <ul className="absolute inset-x-6 bottom-full mb-2 overflow-hidden rounded-[2px] border border-hairline bg-surface">
@@ -100,26 +98,20 @@ export function CommandInput({ onSubmit, disabled, suggestions = [] }: Props) {
         </ul>
       )}
 
-      <span className="select-none font-mono text-mono text-accent">&gt;</span>
-      <div className="relative flex-1">
+      <div className="flex items-center gap-3">
+        <span className="select-none font-mono text-mono text-accent">&gt;</span>
         <input
           ref={inputRef}
           className="cmd text-mono"
           value={value}
           onChange={(e) => {
             setValue(e.target.value);
-            setCaret(e.target.selectionStart ?? e.target.value.length);
+            setError(false);
             setOpen(true);
             setHighlight(-1);
           }}
           onKeyDown={handleKeyDown}
-          onKeyUp={syncCaret}
-          onSelect={syncCaret}
-          onClick={syncCaret}
-          onFocus={() => {
-            setOpen(true);
-            syncCaret();
-          }}
+          onFocus={() => setOpen(true)}
           onBlur={() => setOpen(false)}
           disabled={disabled}
           autoFocus
@@ -127,15 +119,11 @@ export function CommandInput({ onSubmit, disabled, suggestions = [] }: Props) {
           autoComplete="off"
           aria-label="Guess the term, or submit empty to skip for a hint"
         />
-        {/* Block cursor: an invisible mirror of the text up to the caret places
-            the block on the real insertion point. It is the only caret. */}
-        {!disabled && (
-          <div className="pointer-events-none absolute inset-0 flex items-center font-mono text-mono">
-            <span className="invisible whitespace-pre">{value.slice(0, caret)}</span>
-            <span className="animate-cursor-blink h-[18px] w-[9px] bg-accent" />
-          </div>
-        )}
       </div>
+
+      {error && (
+        <span className="pl-6 font-mono text-meta uppercase text-danger">not a valid term</span>
+      )}
     </form>
   );
 }

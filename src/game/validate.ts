@@ -20,3 +20,9 @@ export function isCorrect(guess: string, term: string): boolean {
   const g = normalize(guess);
   return g !== '' && g === normalize(term);
 }
+
+/** True when the guess normalizes to one of the known terms. */
+export function isValidTerm(guess: string, terms: string[]): boolean {
+  const g = normalize(guess);
+  return g !== '' && terms.some((t) => normalize(t) === g);
+}
