@@ -55,8 +55,12 @@ create table if not exists public.scores (
   attempts_used  int not null check (attempts_used between 1 and 6),
   solved         boolean not null default false,
   is_practice    boolean not null default false,
+  guesses        text[] not null default '{}',
   completed_at   timestamptz not null default now()
 );
+
+-- Add guesses to an already-existing scores table.
+alter table public.scores add column if not exists guesses text[] not null default '{}';
 
 -- One daily score per user per term; practice rows are unlimited.
 create unique index if not exists scores_user_daily_unique

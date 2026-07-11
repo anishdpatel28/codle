@@ -1,10 +1,11 @@
-// React binding over the pure game machine. Owns the per-round state and resets
-// it whenever the term changes (new day, new practice pull).
+// React binding over the game machine. Resets when the term changes, and — when
+// `persist` is set — restores and saves in-progress state locally by term id.
 
 import { useCallback, useEffect, useState } from 'react';
 import type { DailyTerm } from '../data/types';
 import type { GameState } from './types';
 import { initGame, submitGuess } from './gameMachine';
+import { loadProgress, saveProgress } from '../data/progress';
 
 export interface UseGame {
   state: GameState;
@@ -12,12 +13,21 @@ export interface UseGame {
   reset: () => void;
 }
 
-export function useGame(term: DailyTerm | null): UseGame {
+export function useGame(term: DailyTerm | null, persist = false): UseGame {
   const [state, setState] = useState<GameState>(initGame);
+  const termId = term?.id ?? null;
 
   useEffect(() => {
-    setState(initGame());
-  }, [term?.id]);
+    if (!termId) {
+      setState(initGame());
+      return;
+    }
+    setState((persist && loadProgress(termId)) || initGame());
+  }, [termId, persist]);
+
+  useEffect(() => {
+    if (persist && term) saveProgress(term.id, state);
+  }, [persist, term, state]);
 
   const submit = useCallback(
     (guess: string) => {

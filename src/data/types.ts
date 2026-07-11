@@ -18,6 +18,8 @@ export interface Score {
   attemptsUsed: number;
   solved: boolean;
   isPractice: boolean;
+  /** Guesses made that round, in order; an empty string is a skip. */
+  guesses: string[];
   completedAt: string;
 }
 
@@ -27,4 +29,5 @@ export interface ScoreInput {
   attemptsUsed: number;
   solved: boolean;
   isPractice: boolean;
+  guesses: string[];
 }

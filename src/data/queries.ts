@@ -26,6 +26,7 @@ interface ScoreRow {
   attempts_used: number;
   solved: boolean;
   is_practice: boolean;
+  guesses: string[] | null;
   completed_at: string;
 }
 
@@ -47,9 +48,13 @@ function mapScore(row: ScoreRow): Score {
     attemptsUsed: row.attempts_used,
     solved: row.solved,
     isPractice: row.is_practice,
+    guesses: row.guesses ?? [],
     completedAt: row.completed_at,
   };
 }
+
+const SCORE_COLUMNS =
+  'id, user_id, daily_term_id, attempts_used, solved, is_practice, guesses, completed_at';
 
 // ---------------------------------------------------------------------------
 // Daily terms
@@ -107,81 +112,109 @@ function readLocalScores(): Score[] {
 }
 
 function writeLocalScores(scores: Score[]): void {
-  localStorage.setItem(LOCAL_SCORES_KEY, JSON.stringify(scores));
+  try {
+    localStorage.setItem(LOCAL_SCORES_KEY, JSON.stringify(scores));
+  } catch {
+    // storage unavailable
+  }
+}
+
+function upsertLocalScore(input: ScoreInput): void {
+  if (input.isPractice) return;
+  const scores = readLocalScores();
+  const record: Score = {
+    id: `local-${input.dailyTermId}`,
+    userId: 'local',
+    dailyTermId: input.dailyTermId,
+    attemptsUsed: input.attemptsUsed,
+    solved: input.solved,
+    isPractice: false,
+    guesses: input.guesses,
+    completedAt: new Date().toISOString(),
+  };
+  const idx = scores.findIndex((s) => s.dailyTermId === input.dailyTermId && !s.isPractice);
+  if (idx >= 0) scores[idx] = record;
+  else scores.push(record);
+  writeLocalScores(scores);
+}
+
+/** True when scores live in localStorage: no backend, or a signed-out guest. */
+function scoresAreLocal(userId: string | null): boolean {
+  return !supabase || !userId;
 }
 
 /**
- * Non-practice daily scores for a user, keyed by daily_term_id. Used by the
- * archive and streak stats. Practice results are intentionally excluded.
+ * Non-practice daily scores keyed by daily_term_id, for the archive and stats.
+ * Signed-in users read from the backend; guests read their local store.
  */
 export async function getUserScores(
   userId: string | null,
 ): Promise<Record<string, Score>> {
-  if (!supabase) {
-    const map: Record<string, Score> = {};
+  const map: Record<string, Score> = {};
+
+  if (scoresAreLocal(userId)) {
     for (const s of readLocalScores()) {
       if (!s.isPractice) map[s.dailyTermId] = s;
     }
     return map;
   }
-  if (!userId) return {};
 
-  const { data, error } = await supabase
+  const { data, error } = await supabase!
     .from('scores')
-    .select('id, user_id, daily_term_id, attempts_used, solved, is_practice, completed_at')
+    .select(SCORE_COLUMNS)
     .eq('user_id', userId)
     .eq('is_practice', false);
 
   if (error) throw error;
-
-  const map: Record<string, Score> = {};
   for (const row of data as ScoreRow[]) {
     map[row.daily_term_id] = mapScore(row);
   }
   return map;
 }
 
-/**
- * Persist a finished round. Daily results upsert one row per user+term;
- * practice results are stored separately and never affect streaks.
- */
-export async function saveScore(
+/** A single non-practice score for a term, for archive review. */
+export async function getScore(
   userId: string | null,
-  input: ScoreInput,
-): Promise<void> {
-  if (!supabase) {
-    const scores = readLocalScores();
-    if (!input.isPractice) {
-      const idx = scores.findIndex(
-        (s) => s.dailyTermId === input.dailyTermId && !s.isPractice,
-      );
-      const record: Score = {
-        id: `local-${input.dailyTermId}`,
-        userId: 'local',
-        dailyTermId: input.dailyTermId,
-        attemptsUsed: input.attemptsUsed,
-        solved: input.solved,
-        isPractice: false,
-        completedAt: new Date().toISOString(),
-      };
-      if (idx >= 0) scores[idx] = record;
-      else scores.push(record);
-    }
-    writeLocalScores(scores);
+  dailyTermId: string,
+): Promise<Score | null> {
+  if (scoresAreLocal(userId)) {
+    return (
+      readLocalScores().find((s) => s.dailyTermId === dailyTermId && !s.isPractice) ?? null
+    );
+  }
+
+  const { data, error } = await supabase!
+    .from('scores')
+    .select(SCORE_COLUMNS)
+    .eq('user_id', userId)
+    .eq('daily_term_id', dailyTermId)
+    .eq('is_practice', false)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data ? mapScore(data as ScoreRow) : null;
+}
+
+/** Persist a finished round. Practice results are never recorded. */
+export async function saveScore(userId: string | null, input: ScoreInput): Promise<void> {
+  if (input.isPractice) return;
+
+  if (scoresAreLocal(userId)) {
+    upsertLocalScore(input);
     return;
   }
 
-  // Practice results are never persisted to the signed-in account's streak set.
-  if (!userId || input.isPractice) return;
+  await upsertRemoteScore(userId as string, input);
+}
 
-  const { data: existing, error: selErr } = await supabase
+async function upsertRemoteScore(userId: string, input: ScoreInput): Promise<void> {
+  const { data: existing, error: selErr } = await supabase!
     .from('scores')
     .select('id')
     .eq('user_id', userId)
     .eq('daily_term_id', input.dailyTermId)
     .eq('is_practice', false)
     .maybeSingle();
-
   if (selErr) throw selErr;
 
   const payload = {
@@ -190,17 +223,41 @@ export async function saveScore(
     attempts_used: input.attemptsUsed,
     solved: input.solved,
     is_practice: false,
+    guesses: input.guesses,
     completed_at: new Date().toISOString(),
   };
 
   if (existing) {
-    const { error } = await supabase
+    const { error } = await supabase!
       .from('scores')
       .update(payload)
       .eq('id', (existing as { id: string }).id);
     if (error) throw error;
   } else {
-    const { error } = await supabase.from('scores').insert(payload);
+    const { error } = await supabase!.from('scores').insert(payload);
     if (error) throw error;
   }
+}
+
+/**
+ * On sign-in, carry a guest's locally-saved scores into their account, then
+ * clear the local store. Existing account scores are left untouched.
+ */
+export async function migrateGuestScores(userId: string): Promise<void> {
+  if (!supabase) return;
+  const local = readLocalScores().filter((s) => !s.isPractice);
+  if (local.length === 0) return;
+
+  const existing = await getUserScores(userId);
+  for (const s of local) {
+    if (existing[s.dailyTermId]) continue;
+    await upsertRemoteScore(userId, {
+      dailyTermId: s.dailyTermId,
+      attemptsUsed: s.attemptsUsed,
+      solved: s.solved,
+      isPractice: false,
+      guesses: s.guesses,
+    });
+  }
+  writeLocalScores([]);
 }

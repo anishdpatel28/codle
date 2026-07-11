@@ -20,7 +20,7 @@ export function DailyPage() {
   const { user } = useAuth();
   const { term, loading, error } = useDaily(today);
   const { terms, scores, stats, reload } = useDashboard(user?.id ?? null);
-  const { state, submit } = useGame(term);
+  const { state, submit } = useGame(term, true);
   const suggestions = useMemo(() => getTermNames(), []);
 
   // Persist the finished round exactly once, then refresh stats.
@@ -34,8 +34,9 @@ export function DailyPage() {
       attemptsUsed: state.attemptsUsed,
       solved: state.status === 'won',
       isPractice: false,
+      guesses: state.guesses,
     }).then(reload);
-  }, [term, state.status, state.attemptsUsed, user?.id, reload]);
+  }, [term, state.status, state.attemptsUsed, state.guesses, user?.id, reload]);
 
   const finished = state.status !== 'playing';
   const sidebar = (

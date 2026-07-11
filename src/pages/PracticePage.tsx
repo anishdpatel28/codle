@@ -16,7 +16,7 @@ export function PracticePage() {
   const { date } = useParams();
   const { user } = useAuth();
   const { term, loading, error, reroll, canReroll } = usePractice(date);
-  const { state, submit } = useGame(term);
+  const { state, submit } = useGame(term, Boolean(date));
   const suggestions = useMemo(() => getTermNames(), []);
 
   // A dated replay from the archive is a real result for that day; a random pull
@@ -31,8 +31,9 @@ export function PracticePage() {
       attemptsUsed: state.attemptsUsed,
       solved: state.status === 'won',
       isPractice: false,
+      guesses: state.guesses,
     });
-  }, [date, term, state.status, state.attemptsUsed, user?.id]);
+  }, [date, term, state.status, state.attemptsUsed, state.guesses, user?.id]);
 
   return (
     <Layout>
