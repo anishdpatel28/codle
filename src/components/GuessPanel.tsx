@@ -12,7 +12,7 @@ export function GuessPanel({ guesses, solved, total }: Props) {
   return (
     <section className="rounded-[2px] border border-hairline bg-surface p-4">
       <h2 className="mb-3 font-sans text-meta uppercase text-muted">Guesses</h2>
-      <ol className="flex flex-col gap-2">
+      <ol className="flex flex-col gap-1">
         {Array.from({ length: total }).map((_, i) => {
           const filled = i < guesses.length;
           const guess = filled ? guesses[i] : '';
@@ -26,7 +26,7 @@ export function GuessPanel({ guesses, solved, total }: Props) {
                 ? 'text-muted'
                 : 'text-danger';
           return (
-            <li key={i} className="flex h-[22px] items-center gap-3 font-mono text-mono">
+            <li key={i} className="flex h-6 items-center gap-3 font-mono text-mono">
               <span className="select-none text-muted/60">{String(i + 1).padStart(2, '0')}</span>
               {filled ? (
                 <span className={`truncate ${cls}`}>{skipped ? 'Skipped' : guess}</span>
