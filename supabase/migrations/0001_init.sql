@@ -1,5 +1,4 @@
 -- codle schema, row-level security, and seeded daily terms.
--- Run this in the Supabase SQL editor or via the CLI.
 
 create table if not exists public.daily_terms (
   id          uuid primary key default gen_random_uuid(),
