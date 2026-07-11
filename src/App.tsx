@@ -4,6 +4,7 @@ import { DailyPage } from './pages/DailyPage';
 import { ArchivePage } from './pages/ArchivePage';
 import { ArchiveReviewPage } from './pages/ArchiveReviewPage';
 import { PracticePage } from './pages/PracticePage';
+import { PrivacyPage } from './pages/PrivacyPage';
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
           <Route path="/archive/:date" element={<ArchiveReviewPage />} />
           <Route path="/practice" element={<PracticePage />} />
           <Route path="/practice/:date" element={<PracticePage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
