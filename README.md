@@ -12,8 +12,7 @@ log, not a letter grid.
 
 ## Screenshot
 
-<!-- Replace with an actual screenshot once deployed. -->
-![codle — the daily signal screen](docs/screenshot.png)
+_Screenshot to be added once the final UI ships._
 
 ## How it plays
 
