@@ -14,6 +14,7 @@ export function initGame(): GameState {
     solvedOnAttempt: null,
     lastResult: null,
     feedbackId: 0,
+    guesses: [],
   };
 }
 
@@ -32,6 +33,9 @@ export function submitGuess(
 
   const feedbackId = state.feedbackId + 1;
   const attemptsUsed = state.attemptsUsed + 1;
+  const empty = isEmptyGuess(rawGuess);
+  // Record the guess; a skip is stored as an empty string.
+  const guesses = [...state.guesses, empty ? '' : rawGuess.trim()];
 
   if (isCorrect(rawGuess, term)) {
     return {
@@ -41,6 +45,7 @@ export function submitGuess(
       solvedOnAttempt: attemptsUsed,
       lastResult: 'correct',
       feedbackId,
+      guesses,
     };
   }
 
@@ -53,12 +58,8 @@ export function submitGuess(
     attemptsUsed,
     revealedHints,
     status,
-    lastResult: isEmptyGuess(rawGuess) ? 'skip' : 'wrong',
+    lastResult: empty ? 'skip' : 'wrong',
     feedbackId,
+    guesses,
   };
-}
-
-/** Attempts remaining, for the signal-block meter. */
-export function attemptsRemaining(state: GameState): number {
-  return MAX_ATTEMPTS - state.attemptsUsed;
 }

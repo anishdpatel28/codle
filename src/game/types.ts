@@ -14,4 +14,6 @@ export interface GameState {
   lastResult: LastResult;
   /** Bumped on every submission so the UI can re-trigger reveal animations. */
   feedbackId: number;
+  /** Every guess this round, in submission order. An empty string is a skip. */
+  guesses: string[];
 }
