@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-bg text-primary font-sans antialiased;
+  }
+
+  /* Terminal command input: strip the native chrome so the caret/prompt read
+     as a command line, not a search pill. */
+  input.cmd {
+    @apply bg-transparent outline-none border-none w-full text-primary font-mono caret-accent;
+  }
+  input.cmd::placeholder {
+    @apply text-muted;
+  }
+}
+
+@layer utilities {
+  /* Faint amber decay glow left behind by the decrypt scanline. */
+  .glow-accent {
+    text-shadow: 0 0 8px rgba(255, 138, 61, 0.55);
+  }
+
+  /* Redacted/blacked-out placeholder line for a locked hint. */
+  .redacted-bar {
+    @apply bg-muted/40 rounded-[2px];
+  }
+}
