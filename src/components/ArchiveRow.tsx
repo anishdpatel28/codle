@@ -20,28 +20,23 @@ export function ArchiveRow({ term, score }: Props) {
           <span className="font-mono text-meta uppercase text-muted">{term.date}</span>
           <span className="font-mono text-mono font-medium text-accent">{term.term}</span>
         </div>
-        <div className="flex items-center gap-4">
-          <span className={`font-mono text-mono ${score.solved ? 'text-success' : 'text-danger'}`}>
-            {score.solved ? `decoded ${score.attemptsUsed}/6` : 'missed · X/6'}
-          </span>
-          <span className="font-mono text-mono text-muted">&gt; review</span>
-        </div>
+        <span className={`font-mono text-mono ${score.solved ? 'text-success' : 'text-danger'}`}>
+          {score.solved ? `decoded ${score.attemptsUsed}/6` : 'missed · X/6'}
+        </span>
       </Link>
     );
   }
 
   return (
-    <div className="flex items-center justify-between gap-4 border-b border-hairline px-2 py-3">
+    <Link
+      to={`/practice/${term.date}`}
+      className="flex items-center justify-between gap-4 border-b border-hairline px-2 py-3 transition-colors hover:bg-surface-raised"
+    >
       <div className="flex flex-col gap-1">
         <span className="font-mono text-meta uppercase text-muted">{term.date}</span>
         <span className="redacted-bar inline-block h-[14px] w-40" aria-label="not played" />
       </div>
-      <Link
-        to={`/practice/${term.date}`}
-        className="font-mono text-mono text-accent transition-shadow hover:glow-accent"
-      >
-        &gt; decode
-      </Link>
-    </div>
+      <span className="font-mono text-mono text-accent">&gt; decode</span>
+    </Link>
   );
 }

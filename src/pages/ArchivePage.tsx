@@ -11,13 +11,9 @@ export function ArchivePage() {
 
   return (
     <Layout>
-      <h1 className="mb-2 font-sans text-h1 text-primary">
-        Signal <span className="text-accent">archive</span>
+      <h1 className="mb-8 font-sans text-h1 text-primary">
+        Codle <span className="text-accent">archive</span>
       </h1>
-      <p className="mb-8 max-w-prose font-sans text-body text-muted">
-        Past transmissions with your result on each. Unplayed days stay redacted
-        so you can still decode them in practice.
-      </p>
 
       {loading && <p className="font-mono text-mono text-muted">decoding archive…</p>}
       {error && <p className="font-mono text-mono text-danger">error: {error}</p>}
