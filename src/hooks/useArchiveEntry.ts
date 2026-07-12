@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { getDailyTerm, getScore } from '../data/queries';
+import { readableError } from '../lib/errors';
 import type { DailyTerm, Score } from '../data/types';
 
 export interface ArchiveEntry {
@@ -31,7 +32,7 @@ export function useArchiveEntry(date: string | undefined, userId: string | null)
         setScore(t ? await getScore(userId, t.id) : null);
       })
       .catch((e: unknown) => {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
+        if (!cancelled) setError(readableError(e));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

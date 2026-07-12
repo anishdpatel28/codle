@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getDailyTerm } from '../data/queries';
+import { readableError } from '../lib/errors';
 import type { DailyTerm } from '../data/types';
 
 export interface DailyState {
@@ -25,7 +26,7 @@ export function useDaily(dateISO: string): DailyState {
         if (!cancelled) setTerm(t);
       })
       .catch((e: unknown) => {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
+        if (!cancelled) setError(readableError(e));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

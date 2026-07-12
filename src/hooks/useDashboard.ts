@@ -3,6 +3,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getPastTerms, getUserScores } from '../data/queries';
+import { readableError } from '../lib/errors';
 import { computeStats, type Stats } from '../data/stats';
 import type { DailyTerm, Score } from '../data/types';
 
@@ -34,7 +35,7 @@ export function useDashboard(userId: string | null): Dashboard {
         setScores(s);
       })
       .catch((e: unknown) => {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
+        if (!cancelled) setError(readableError(e));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

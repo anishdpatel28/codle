@@ -1,23 +1,22 @@
 // Practice mode loader: a specific past term when a date is given (replay from
-// the archive), otherwise a random past term with a reroll.
+// the archive), otherwise a random past term. `seed` re-pulls a fresh random
+// term whenever it changes, so re-entering practice starts a new round.
 
 import { useEffect, useState } from 'react';
 import { getDailyTerm, getRandomPastTerm } from '../data/queries';
+import { readableError } from '../lib/errors';
 import type { DailyTerm } from '../data/types';
 
 export interface PracticeState {
   term: DailyTerm | null;
   loading: boolean;
   error: string | null;
-  reroll: () => void;
-  canReroll: boolean;
 }
 
-export function usePractice(date?: string): PracticeState {
+export function usePractice(date?: string, seed?: string): PracticeState {
   const [term, setTerm] = useState<DailyTerm | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [nonce, setNonce] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -30,7 +29,7 @@ export function usePractice(date?: string): PracticeState {
         if (!cancelled) setTerm(t);
       })
       .catch((e: unknown) => {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
+        if (!cancelled) setError(readableError(e));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -39,13 +38,7 @@ export function usePractice(date?: string): PracticeState {
     return () => {
       cancelled = true;
     };
-  }, [date, nonce]);
+  }, [date, seed]);
 
-  return {
-    term,
-    loading,
-    error,
-    reroll: () => setNonce((n) => n + 1),
-    canReroll: !date,
-  };
+  return { term, loading, error };
 }
