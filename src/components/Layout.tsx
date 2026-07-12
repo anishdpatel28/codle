@@ -6,12 +6,13 @@ import { Footer } from './Footer';
 // margins (64 left / 96 right at desktop), never a centered container.
 
 export function Layout({ children }: { children: ReactNode }) {
-  // Not a sticky footer: main sizes to its content and the footer sits directly
-  // below it, so short pages don't leave a large gap above the footer.
+  // Sticky footer: a full-height flex column where main grows to absorb any
+  // leftover space, so the footer keeps its natural (fixed) height and stays
+  // pinned to the bottom on every page regardless of content length.
   return (
-    <div className="min-h-full bg-bg">
+    <div className="flex min-h-full flex-col bg-bg">
       <Header />
-      <main className="px-6 py-8 lg:pb-16 lg:pl-16 lg:pr-24 lg:pt-12">{children}</main>
+      <main className="flex-1 px-6 py-8 lg:pb-16 lg:pl-16 lg:pr-24 lg:pt-12">{children}</main>
       <Footer />
     </div>
   );
