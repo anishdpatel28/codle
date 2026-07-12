@@ -1,4 +1,6 @@
-// Guess input with a prefix-matched term dropdown. Only a known term (or an
+// Guess input with a substring-matched term dropdown. Typed text matches
+// anywhere within a term, but terms whose start (or the start of a word within
+// them) matches are ranked above mid-string matches. Only a known term (or an
 // empty skip) can be submitted; anything else shows an inline error. Uses the
 // browser's native caret (tinted amber) so selection/highlighting work normally.
 
@@ -13,6 +15,11 @@ interface Props {
 
 const MAX_SUGGESTIONS = 6;
 
+// Strip case and every non-alphanumeric character so separators (spaces,
+// hyphens) don't block a match — "pth fir" collapses to "pthfir", which is a
+// substring of "depthfirstsearch".
+const collapse = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+
 export function CommandInput({ onSubmit, disabled, suggestions = [] }: Props) {
   const [value, setValue] = useState('');
   const [open, setOpen] = useState(false);
@@ -21,11 +28,22 @@ export function CommandInput({ onSubmit, disabled, suggestions = [] }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const matches = useMemo(() => {
-    const q = value.trim().toLowerCase();
+    const q = collapse(value.trim());
     if (!q) return [];
     return suggestions
-      .filter((s) => s.toLowerCase().startsWith(q))
-      .slice(0, MAX_SUGGESTIONS);
+      .map((term) => {
+        const idx = collapse(term).indexOf(q);
+        if (idx === -1) return null;
+        // rank 0: term prefix · 1: a word within the term starts with the query
+        // · 2: mid-string substring. Lower ranks surface first.
+        const words = term.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+        const rank = idx === 0 ? 0 : words.some((w) => w.startsWith(q)) ? 1 : 2;
+        return { term, rank, idx };
+      })
+      .filter((m): m is { term: string; rank: number; idx: number } => m !== null)
+      .sort((a, b) => a.rank - b.rank || a.idx - b.idx || a.term.localeCompare(b.term))
+      .slice(0, MAX_SUGGESTIONS)
+      .map((m) => m.term);
   }, [value, suggestions]);
 
   const showList = open && !disabled && matches.length > 0;
