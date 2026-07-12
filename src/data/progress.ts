@@ -6,7 +6,7 @@ import type { GameState } from '../game/types';
 import { initGame } from '../game/gameMachine';
 import { readStore, writeStore } from './storage';
 
-const KEY = 'codle:progress';
+const LOCAL_PROGRESS_KEY = 'codle:progress';
 
 // The transient fields (lastResult flash, feedbackId) are not worth persisting.
 interface PersistedRound {
@@ -20,11 +20,11 @@ interface PersistedRound {
 type ProgressMap = Record<string, PersistedRound>;
 
 function readAll(): ProgressMap {
-  return readStore<ProgressMap>(KEY, {});
+  return readStore<ProgressMap>(LOCAL_PROGRESS_KEY, {});
 }
 
 function writeAll(map: ProgressMap): void {
-  writeStore(KEY, map);
+  writeStore(LOCAL_PROGRESS_KEY, map);
 }
 
 export function loadProgress(termId: string): GameState | null {
