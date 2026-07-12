@@ -4,7 +4,7 @@
 // history, since practice isn't part of the tracked daily record.
 
 import { useEffect, useMemo, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { LogPanel } from '../components/LogPanel';
 import { GuessPanel } from '../components/GuessPanel';
@@ -17,8 +17,11 @@ import { getTermNames, saveScore } from '../data/queries';
 
 export function PracticePage() {
   const { date } = useParams();
+  const location = useLocation();
   const { user } = useAuth();
-  const { term, loading, error, reroll, canReroll } = usePractice(date);
+  // location.key changes on every navigation to this route — including clicking
+  // "practice" while already here — which re-pulls a fresh random round.
+  const { term, loading, error } = usePractice(date, location.key);
   const { state, submit } = useGame(term, Boolean(date));
   const suggestions = useMemo(() => getTermNames(), []);
 
@@ -62,25 +65,14 @@ export function PracticePage() {
             />
           }
           main={
-            <>
-              <LogPanel
-                term={term}
-                state={state}
-                onSubmit={submit}
-                signalLabel={date ? `SIGNAL://${date}` : 'SIGNAL://PRACTICE'}
-                maxAttempts={MAX_ATTEMPTS}
-                suggestions={suggestions}
-              />
-              {canReroll && (
-                <button
-                  type="button"
-                  onClick={reroll}
-                  className="mt-6 font-mono text-mono text-accent transition-shadow hover:glow-accent"
-                >
-                  &gt; new signal
-                </button>
-              )}
-            </>
+            <LogPanel
+              term={term}
+              state={state}
+              onSubmit={submit}
+              signalLabel={date ? `SIGNAL://${date}` : 'SIGNAL://PRACTICE'}
+              maxAttempts={MAX_ATTEMPTS}
+              suggestions={suggestions}
+            />
           }
         />
       )}

@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { AuthButton } from './AuthButton';
 
 function navClass({ isActive }: { isActive: boolean }): string {
@@ -6,6 +6,14 @@ function navClass({ isActive }: { isActive: boolean }): string {
 }
 
 export function Header() {
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  // Always push a fresh navigation so clicking "practice" — even from the
+  // practice page — starts a new random round (see usePractice's location.key
+  // seed). A plain link to the current route would be a no-op.
+  const startPractice = () => navigate('/practice');
+
   return (
     <header className="flex flex-wrap items-center justify-between gap-4 border-b border-hairline px-6 py-4 lg:px-16">
       <div className="flex items-center gap-8">
@@ -19,9 +27,13 @@ export function Header() {
           <NavLink to="/archive" className={navClass}>
             archive
           </NavLink>
-          <NavLink to="/practice" className={navClass}>
+          <button
+            type="button"
+            onClick={startPractice}
+            className={`cursor-pointer ${navClass({ isActive: pathname.startsWith('/practice') })}`}
+          >
             practice
-          </NavLink>
+          </button>
         </nav>
       </div>
       <AuthButton />
