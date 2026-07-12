@@ -41,7 +41,8 @@ export function PracticePage() {
   return (
     <Layout>
       <h1 className="mb-8 font-sans text-h1 text-primary">
-        {date ? 'Archived' : 'Practice'} <span className="text-accent">signal</span>
+        {date ? 'Archived' : 'Practice'}{' '}
+        <span className="text-accent">{date ? 'signal' : 'codle'}</span>
       </h1>
 
       {loading && <p className="font-mono text-mono text-muted">acquiring signal…</p>}
