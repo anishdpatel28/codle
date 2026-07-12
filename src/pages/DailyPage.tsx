@@ -19,7 +19,7 @@ export function DailyPage() {
   const today = todayISO();
   const { user } = useAuth();
   const { term, loading, error } = useDaily(today);
-  const { terms, scores, stats, reload } = useDashboard(user?.id ?? null);
+  const { stats, reload } = useDashboard(user?.id ?? null);
   const { state, submit } = useGame(term, true);
   const suggestions = useMemo(() => getTermNames(), []);
 
@@ -42,8 +42,6 @@ export function DailyPage() {
   const sidebar = (
     <Sidebar
       stats={stats}
-      terms={terms}
-      scores={scores}
       guesses={state.guesses}
       solved={state.status === 'won'}
       share={{

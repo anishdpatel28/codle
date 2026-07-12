@@ -17,7 +17,7 @@ export function ArchiveReviewPage() {
   const { date } = useParams();
   const { user } = useAuth();
   const { term, score, loading, error } = useArchiveEntry(date, user?.id ?? null);
-  const { terms, scores, stats } = useDashboard(user?.id ?? null);
+  const { stats } = useDashboard(user?.id ?? null);
 
   return (
     <Layout>
@@ -45,8 +45,6 @@ export function ArchiveReviewPage() {
           sidebar={
             <Sidebar
               stats={stats}
-              terms={terms}
-              scores={scores}
               guesses={score.guesses}
               solved={score.solved}
               share={{
