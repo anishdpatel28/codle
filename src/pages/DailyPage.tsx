@@ -5,6 +5,9 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { Layout } from '../components/Layout';
 import { LogPanel } from '../components/LogPanel';
+import { LogPanelSkeleton } from '../components/LogPanelSkeleton';
+import { GuessPanelSkeleton } from '../components/GuessPanelSkeleton';
+import { StatsBlockSkeleton } from '../components/StatsBlockSkeleton';
 import { Sidebar } from '../components/Sidebar';
 import { TwoColumn } from '../components/TwoColumn';
 import { useAuth } from '../hooks/authContext';
@@ -61,27 +64,35 @@ export function DailyPage() {
       </h1>
 
       <TwoColumn
-        sidebar={sidebar}
+        sidebar={
+          loading ? (
+            <div className="flex flex-col gap-8">
+              <GuessPanelSkeleton total={MAX_ATTEMPTS} />
+              <StatsBlockSkeleton />
+            </div>
+          ) : (
+            sidebar
+          )
+        }
         main={
-          <>
-            {loading && <p className="font-mono text-mono text-muted">acquiring signal…</p>}
-            {error && <p className="font-mono text-mono text-danger">error: {error}</p>}
-            {!loading && !error && !term && (
-              <p className="font-mono text-mono text-muted">
-                no signal is scheduled for {today}. check back tomorrow.
-              </p>
-            )}
-            {term && (
-              <LogPanel
-                term={term}
-                state={state}
-                onSubmit={submit}
-                signalLabel={`SIGNAL://${today}`}
-                maxAttempts={MAX_ATTEMPTS}
-                suggestions={suggestions}
-              />
-            )}
-          </>
+          loading ? (
+            <LogPanelSkeleton />
+          ) : error ? (
+            <p className="font-mono text-mono text-danger">error: {error}</p>
+          ) : !term ? (
+            <p className="font-mono text-mono text-muted">
+              no signal is scheduled for {today}. check back tomorrow.
+            </p>
+          ) : (
+            <LogPanel
+              term={term}
+              state={state}
+              onSubmit={submit}
+              signalLabel={`SIGNAL://${today}`}
+              maxAttempts={MAX_ATTEMPTS}
+              suggestions={suggestions}
+            />
+          )
         }
       />
     </Layout>

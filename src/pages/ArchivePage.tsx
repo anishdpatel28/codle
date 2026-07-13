@@ -2,6 +2,7 @@
 
 import { Layout } from '../components/Layout';
 import { ArchiveRow } from '../components/ArchiveRow';
+import { ArchiveSkeleton } from '../components/ArchiveSkeleton';
 import { useAuth } from '../hooks/authContext';
 import { useDashboard } from '../hooks/useDashboard';
 
@@ -15,7 +16,7 @@ export function ArchivePage() {
         Codle <span className="text-accent">archive</span>
       </h1>
 
-      {loading && <p className="font-mono text-mono text-muted">decoding archive…</p>}
+      {loading && <ArchiveSkeleton />}
       {error && <p className="font-mono text-mono text-danger">error: {error}</p>}
 
       {!loading && !error && (

@@ -7,7 +7,9 @@ import { useEffect, useMemo, useRef } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { LogPanel } from '../components/LogPanel';
+import { LogPanelSkeleton } from '../components/LogPanelSkeleton';
 import { GuessPanel } from '../components/GuessPanel';
+import { GuessPanelSkeleton } from '../components/GuessPanelSkeleton';
 import { TwoColumn } from '../components/TwoColumn';
 import { usePractice } from '../hooks/usePractice';
 import { useGame } from '../game/useGame';
@@ -48,13 +50,17 @@ export function PracticePage() {
         <span className="text-accent">{date ? 'signal' : 'codle'}</span>
       </h1>
 
-      {loading && <p className="font-mono text-mono text-muted">acquiring signal…</p>}
-      {error && <p className="font-mono text-mono text-danger">error: {error}</p>}
-      {!loading && !error && !term && (
+      {loading ? (
+        <TwoColumn
+          disclosureLabel="guesses"
+          sidebar={<GuessPanelSkeleton total={MAX_ATTEMPTS} />}
+          main={<LogPanelSkeleton />}
+        />
+      ) : error ? (
+        <p className="font-mono text-mono text-danger">error: {error}</p>
+      ) : !term ? (
         <p className="font-mono text-mono text-muted">no past transmissions to practice yet.</p>
-      )}
-
-      {term && (
+      ) : (
         <TwoColumn
           disclosureLabel="guesses"
           sidebar={
