@@ -12,7 +12,7 @@ mkdirSync(tmpDir, { recursive: true });
 function emit(rel, rewrite = (s) => s) {
   const ts = readFileSync(resolve(root, rel), 'utf8');
   const js = transformSync(ts, { loader: 'ts', format: 'esm' }).code;
-  const out = resolve(tmpDir, rel.replace(/[\/.]/g, '_') + '.mjs');
+  const out = resolve(tmpDir, rel.replace(/[/.]/g, '_') + '.mjs');
   writeFileSync(out, rewrite(js));
   return pathToFileURL(out).href;
 }
@@ -22,22 +22,38 @@ const rotationUrl = emit('src/data/rotation.ts', (js) =>
   js.replace(/["']\.\/terms["']/, JSON.stringify(termsUrl)),
 );
 const { termForIndex } = await import(rotationUrl);
+const { assertBalancedSql } = await import(emit('src/data/sqlLint.ts'));
 
 const EPOCH = Date.UTC(2026, 6, 1); // 2026-07-01, matches src/data/dailyTerm.ts
 const DAY = 86400000;
 const HORIZON_DAYS = 365;
 
-const sqlStr = (s) => `'${String(s).replace(/'/g, "''")}'`;
+// Dollar-quote every text field ($codle$...$codle$) so apostrophes of any kind —
+// straight or curly — can never terminate a literal early, even if a copy-paste
+// or editor rewrites the quote characters. The tag must not occur in content.
+const DOLLAR_TAG = '$codle$';
+function lit(value) {
+  const str = String(value);
+  if (str.includes(DOLLAR_TAG)) {
+    throw new Error(`Text field contains the dollar-quote tag ${DOLLAR_TAG}: ${JSON.stringify(str)}`);
+  }
+  return `${DOLLAR_TAG}${str}${DOLLAR_TAG}`;
+}
+// Dates are machine-generated ISO strings with no quotes, so a plain literal is safe.
+const dateLit = (d) => `'${d}'`;
 const isoDate = (i) => new Date(EPOCH + i * DAY).toISOString().slice(0, 10);
 
 const rows = Array.from({ length: HORIZON_DAYS }, (_, i) => {
   const t = termForIndex(i);
-  const hints = `ARRAY[${t.hints.map(sqlStr).join(', ')}]::text[]`;
-  return `  (${sqlStr(isoDate(i))}, ${sqlStr(t.term)}, ${hints}, ${sqlStr(t.definition)})`;
+  const hints = `ARRAY[${t.hints.map(lit).join(', ')}]::text[]`;
+  return `  (${dateLit(isoDate(i))}, ${lit(t.term)}, ${hints}, ${lit(t.definition)})`;
 }).join(',\n');
 
-const sql = `-- codle schema, row-level security, and seeded daily terms.
+const insertBlock = `insert into public.daily_terms (date, term, hints, definition) values\n${rows}`;
+
+const initSql = `-- codle schema, row-level security, and seeded daily terms.
 -- Run this in the Supabase SQL editor or via the CLI.
+-- Text fields are dollar-quoted ($codle$...$codle$) so apostrophes cannot break parsing.
 
 create table if not exists public.daily_terms (
   id          uuid primary key default gen_random_uuid(),
@@ -95,12 +111,33 @@ create policy "scores updatable by owner"
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
-insert into public.daily_terms (date, term, hints, definition) values
-${rows}
+${insertBlock}
 on conflict (date) do nothing;
 `;
 
+const reseedSql = `-- Re-seed public.daily_terms from the current term bank.
+--
+-- 0001_init.sql seeds with ON CONFLICT DO NOTHING, so re-running it never
+-- changes dates that already exist. This migration upserts instead: it updates
+-- the term, hints, and definition for each date in place, keeping each row and
+-- its id (so any scores that reference it stay valid). Safe to run repeatedly.
+--
+-- All text fields are dollar-quoted ($codle$...$codle$) so apostrophes of any
+-- kind (straight or curly) can never terminate a literal early.
+
+${insertBlock}
+on conflict (date) do update set
+  term       = excluded.term,
+  hints      = excluded.hints,
+  definition = excluded.definition;
+`;
+
+// Lint before writing: refuse to emit SQL with an unterminated string literal.
+assertBalancedSql(initSql, '0001_init.sql');
+assertBalancedSql(reseedSql, '0004_reseed_daily_terms.sql');
+
 const outDir = resolve(root, 'supabase/migrations');
 mkdirSync(outDir, { recursive: true });
-writeFileSync(resolve(outDir, '0001_init.sql'), sql);
-console.log(`Wrote supabase/migrations/0001_init.sql (${HORIZON_DAYS} days).`);
+writeFileSync(resolve(outDir, '0001_init.sql'), initSql);
+writeFileSync(resolve(outDir, '0004_reseed_daily_terms.sql'), reseedSql);
+console.log(`Wrote 0001_init.sql and 0004_reseed_daily_terms.sql (${HORIZON_DAYS} days).`);
