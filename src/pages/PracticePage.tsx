@@ -47,7 +47,7 @@ export function PracticePage() {
     <Layout>
       <h1 className="mb-8 font-sans text-h1 text-primary">
         {date ? 'Archived' : 'Practice'}{' '}
-        <span className="text-accent">{date ? 'signal' : 'codle'}</span>
+        <span className="text-accent">codle</span>
       </h1>
 
       {loading ? (
