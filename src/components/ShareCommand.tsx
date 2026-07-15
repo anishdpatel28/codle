@@ -2,23 +2,11 @@
 // finished. Builds a spoiler-free signal read — no letter grid.
 
 import { useEffect, useRef, useState } from 'react';
+import { buildShare, type ShareResult } from '../lib/share';
 
 const COPIED_MS = 5000;
 
-interface Props {
-  label: string;
-  status: 'won' | 'lost';
-  attemptsUsed: number;
-  solvedOnAttempt: number | null;
-  total: number;
-}
-
-function buildShare({ label, status, attemptsUsed, solvedOnAttempt, total }: Props): string {
-  const filled = '■'.repeat(attemptsUsed);
-  const empty = '□'.repeat(Math.max(0, total - attemptsUsed));
-  const read = status === 'won' ? `${solvedOnAttempt}/${total} decoded` : `X/${total} signal lost`;
-  return `codle // ${label}\n[${filled}${empty}] ${read}`;
-}
+type Props = ShareResult;
 
 async function copyToClipboard(text: string): Promise<boolean> {
   try {

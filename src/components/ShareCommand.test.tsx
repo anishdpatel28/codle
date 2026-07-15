@@ -1,6 +1,45 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent, act, cleanup } from '@testing-library/react';
 import { ShareCommand } from './ShareCommand';
+import { buildShare } from '../lib/share';
+
+describe('buildShare', () => {
+  it('includes an archive deep link built from the round date', () => {
+    const text = buildShare({
+      label: '2026-07-15',
+      status: 'won',
+      attemptsUsed: 3,
+      solvedOnAttempt: 3,
+      total: 6,
+    });
+    expect(text).toContain('https://playcodle.vercel.app/archive/2026-07-15');
+  });
+
+  it('represents a win with emoji squares, not box characters', () => {
+    const text = buildShare({
+      label: '2026-07-15',
+      status: 'won',
+      attemptsUsed: 3,
+      solvedOnAttempt: 3,
+      total: 6,
+    });
+    expect(text).toContain('🟨🟨🟨⬛⬛⬛');
+    expect(text).toContain('3/6 decoded');
+    expect(text).not.toMatch(/[■□]/);
+  });
+
+  it('fills every square on a loss', () => {
+    const text = buildShare({
+      label: '2026-07-15',
+      status: 'lost',
+      attemptsUsed: 6,
+      solvedOnAttempt: null,
+      total: 6,
+    });
+    expect(text).toContain('🟨🟨🟨🟨🟨🟨');
+    expect(text).toContain('X/6 signal lost');
+  });
+});
 
 describe('ShareCommand', () => {
   beforeEach(() => {
