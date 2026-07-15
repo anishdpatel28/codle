@@ -12,18 +12,13 @@ export interface ShareResult {
   total: number;
 }
 
-export function buildShare({
-  label,
-  status,
-  attemptsUsed,
-  solvedOnAttempt,
-  total,
-}: ShareResult): string {
-  // Emoji squares render as plain text, so a shared result pastes anywhere (texts,
-  // Discord) with no image. Amber marks an attempt spent, black one still unused —
-  // the same signal/dim language the rest of the app uses.
-  const spent = '🟨'.repeat(attemptsUsed);
-  const unused = '⬛'.repeat(Math.max(0, total - attemptsUsed));
-  const read = status === 'won' ? `${solvedOnAttempt}/${total} decoded` : `X/${total} signal lost`;
-  return `codle // ${label}\n${spent}${unused} ${read}\n${archiveUrl(label)}`;
+const KEYCAP = ['0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣'];
+
+export function buildShare({ label, status, solvedOnAttempt, total }: ShareResult): string {
+  // No per-guess grid: the game reveals hints rather than scoring letters, so the
+  // result is a single mark over the fixed attempt total. A keycap is the attempt
+  // that solved it; ❌ means lost. Trailing text matches the app's win/loss copy.
+  const outcome = status === 'won' ? KEYCAP[solvedOnAttempt ?? 0] : '❌';
+  const read = status === 'won' ? 'signal decoded' : 'signal lost';
+  return `codle // ${label}\n${outcome}/${KEYCAP[total]} ${read}\n${archiveUrl(label)}`;
 }

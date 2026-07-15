@@ -15,7 +15,7 @@ describe('buildShare', () => {
     expect(text).toContain('https://playcodle.vercel.app/archive/2026-07-15');
   });
 
-  it('represents a win with emoji squares, not box characters', () => {
+  it('shows the solving attempt as a keycap over the fixed total on a win', () => {
     const text = buildShare({
       label: '2026-07-15',
       status: 'won',
@@ -23,12 +23,13 @@ describe('buildShare', () => {
       solvedOnAttempt: 3,
       total: 6,
     });
-    expect(text).toContain('🟨🟨🟨⬛⬛⬛');
-    expect(text).toContain('3/6 decoded');
-    expect(text).not.toMatch(/[■□]/);
+    expect(text).toContain('3️⃣/6️⃣ signal decoded');
+    // No per-guess square grid, from either the emoji or box-character eras.
+    expect(text).not.toMatch(/[🟨⬛■□]/u);
+    expect(text).not.toContain('signal lost');
   });
 
-  it('fills every square on a loss', () => {
+  it('shows a cross and "signal lost" on a loss', () => {
     const text = buildShare({
       label: '2026-07-15',
       status: 'lost',
@@ -36,8 +37,8 @@ describe('buildShare', () => {
       solvedOnAttempt: null,
       total: 6,
     });
-    expect(text).toContain('🟨🟨🟨🟨🟨🟨');
-    expect(text).toContain('X/6 signal lost');
+    expect(text).toContain('❌/6️⃣ signal lost');
+    expect(text).not.toContain('signal decoded');
   });
 });
 
